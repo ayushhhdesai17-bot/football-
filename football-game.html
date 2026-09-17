@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desai Football - Ultimate Football Game</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:
+        radial-gradient(circle at top,#172554,#020617 65%);
+    color:white;
+    font-family:Arial,Helvetica,sans-serif;
+    min-height:100vh;
+    overflow:hidden;
+}
+
+/* ================= HEADER ================= */
+
+.header{
+    height:70px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 25px;
+    background:rgba(2,6,23,.9);
+    border-bottom:1px solid rgba(255,255,255,.1);
+}
+
+.logo{
+    font-size:25px;
+    font-weight:900;
+    letter-spacing:2px;
+}
+
+.logo span{
+    color:#22c55e;
+}
+
+.game-info{
+    display:flex;
+    gap:20px;
+    align-items:center;
+}
+
+.score-box,
+.timer-box{
+    background:rgba(255,255,255,.08);
+    padding:10px 18px;
+    border-radius:12px;
+    font-weight:bold;
+}
+
+#score{
+    color:#4ade80;
+}
+
+/* ================= GAME AREA ================= */
+
+.game-wrap{
+    width:100%;
+    height:calc(100vh - 70px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+}
+
+canvas{
+    width:min(1200px,96vw);
+    height:min(650px,82vh);
+    border-radius:20px;
+    box-shadow:
+        0 30px 80px rgba(0,0,0,.6),
+        0 0 40px rgba(34,197,94,.12);
+    background:#15803d;
+}
+
+/* ================= CONTROLS ================= */
+
+.controls{
+    position:absolute;
+    bottom:18px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:center;
+    max-width:90%;
+}
+
+.key{
+    padding:8px 12px;
+    background:rgba(2,6,23,.85);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:8px;
+    font-size:12px;
+}
+
+/* ================= MESSAGE ================= */
+
+.message{
+    position:absolute;
+    top:20px;
+    left:50%;
+    transform:translateX(-50%);
+    padding:12px 25px;
+    border-radius:30px;
+    background:rgba(2,6,23,.8);
+    font-weight:bold;
+    opacity:0;
+    transition:.3s;
+    pointer-events:none;
+}
+
+.message.show{
+    opacity:1;
+}
+
+/* ================= START SCREEN ================= */
+
+.start-screen{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(2,6,23,.96),
+            rgba(15,23,42,.94)
+        );
+    z-index:10;
+}
+
+.start-card{
+    width:min(500px,90%);
+    text-align:center;
+    padding:45px 30px;
+    border-radius:25px;
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 30px 100px rgba(0,0,0,.6);
+}
+
+.ball{
+    font-size:75px;
+    animation:float 2s infinite ease-in-out;
+}
+
+@keyframes float{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-12px)}
+}
+
+.start-card h1{
+    font-size:42px;
+    margin:10px 0;
+}
+
+.start-card h1 span{
+    color:#22c55e;
+}
+
+.start-card p{
+    color:#cbd5e1;
+    line-height:1.7;
+}
+
+.start-btn{
+    margin-top:25px;
+    padding:15px 40px;
+    border:none;
+    border-radius:12px;
+    background:#22c55e;
+    color:#052e16;
+    font-size:17px;
+    font-weight:900;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.start-btn:hover{
+    transform:scale(1.06);
+    box-shadow:0 10px 30px rgba(34,197,94,.3);
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:700px){
+
+    .header{
+        height:60px;
+        padding:0 12px;
+    }
+
+    .logo{
+        font-size:17px;
+    }
+
+    .game-info{
+        gap:6px;
+    }
+
+    .score-box,
+    .timer-box{
+        padding:7px 9px;
+        font-size:12px;
+    }
+
+    .start-card h1{
+        font-size:30px;
+    }
+
+    canvas{
+        width:98vw;
+        height:75vh;
+        border-radius:10px;
+    }
+
+    .controls{
+        bottom:5px;
+    }
+
+    .key{
+        font-size:9px;
+        padding:5px 7px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <div class="logo">
+        ⚽ DESAI <span>FOOTBALL</span>
+    </div>
+
+    <div class="game-info">
+
+        <div class="score-box">
+            YOU <span id="score">0</span>
+            -
+            <span id="opponentScore">0</span> CPU
+        </div>
+
+        <div class="timer-box">
+            ⏱ <span id="timer">02:00</span>
+        </div>
+
+    </div>
+
+</header>
+
+
+<div class="game-wrap">
+
+    <canvas id="gameCanvas" width="1200" height="650"></canvas>
+
+    <div id="message" class="message">
+        GOAL!
+    </div>
+
+
+    <!-- START SCREEN -->
+
+    <div id="startScreen" class="start-screen">
+
+        <div class="start-card">
+
+            <div class="ball">⚽</div>
+
+            <h1>
+                DESAI <span>FOOTBALL</span>
+            </h1>
+
+            <p>
+                Ultimate browser football experience.
+                Control your team, pass, sprint,
+                tackle and score goals!
+            </p>
+
+            <button class="start-btn" onclick="startGame()">
+                ▶ START MATCH
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- CONTROLS -->
+
+    <div class="controls">
+
+        <div class="key">WASD / ↑↓←→ MOVE</div>
+        <div class="key">SHIFT SPRINT</div>
+        <div class="key">SPACE SHOOT</div>
+        <div class="key">E PASS</div>
+        <div class="key">Q TACKLE</div>
+        <div class="key">R SWITCH</div>
+        <div class="key">P PAUSE</div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+
+/* =========================================================
+   GAME VARIABLES
+========================================================= */
+
+let gameRunning = false;
+let paused = false;
+
+let score = 0;
+let opponentScore = 0;
+
+let gameTime = 120;
+
+let lastTime = 0;
+
+let keys = {};
+
+let activePlayer = 0;
+
+let messageTimer = 0;
+
+
+/* =========================================================
+   FIELD
+========================================================= */
+
+const field = {
+    x:60,
+    y:40,
+    width:1080,
+    height:570
+};
+
+
+/* =========================================================
+   BALL
+========================================================= */
+
+const ball = {
+
+    x:600,
+    y:325,
+
+    vx:0,
+    vy:0,
+
+    radius:11,
+
+    owner:null,
+
+    shooting:false
+
+};
+
+
+/* =========================================================
+   PLAYERS
+========================================================= */
+
+const players = [
+
+    {
+        x:300,
+        y:325,
+        homeX:300,
+        homeY:325,
+        color:"#38bdf8",
+        number:9,
+        speed:3.5,
+        stamina:100
+    },
+
+    {
+        x:230,
+        y:200,
+        homeX:230,
+        homeY:200,
+        color:"#38bdf8",
+        number:7,
+        speed:3,
+        stamina:100
+    },
+
+    {
+        x:230,
+        y:450,
+        homeX:230,
+        homeY:450,
+        color:"#38bdf8",
+        number:10,
+        speed:3,
+        stamina:100
+    },
+
+    {
+        x:150,
+        y:325,
+        homeX:150,
+        homeY:325,
+        color:"#38bdf8",
+        number:4,
+        speed:2.8,
+        stamina:100
+    }
+];
+
+
+/* =========================================================
+   CPU PLAYERS
+========================================================= */
+
+const enemies = [
+
+    {
+        x:900,
+        y:325,
+        homeX:900,
+        homeY:325,
+        number:9
+    },
+
+    {
+        x:970,
+        y:200,
+        homeX:970,
+        homeY:200,
+        number:7
+    },
+
+    {
+        x:970,
+        y:450,
+        homeX:970,
+        homeY:450,
+        number:10
+    },
+
+    {
+        x:1050,
+        y:325,
+        homeX:1050,
+        homeY:325,
+        number:4
+    }
+];
+
+
+/* =========================================================
+   GOALKEEPERS
+========================================================= */
+
+const goalkeeper = {
+
+    x:1080,
+    y:325,
+    speed:2
+
+};
+
+const playerKeeper = {
+
+    x:120,
+    y:325,
+    speed:2
+
+};
+
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+document.addEventListener("keydown", e => {
+
+    keys[e.key.toLowerCase()] = true;
+
+    if(e.key === " "){
+
+        e.preventDefault();
+
+        shoot();
+
+    }
+
+    if(e.key.toLowerCase() === "e"){
+
+        passBall();
+
+    }
+
+    if(e.key.toLowerCase() === "q"){
+
+        tackle();
+
+    }
+
+    if(e.key.toLowerCase() === "r"){
+
+        switchPlayer();
+
+    }
+
+    if(e.key.toLowerCase() === "p"){
+
+        paused = !paused;
+
+        showMessage(
+            paused ? "PAUSED" : "MATCH RESUMED"
+        );
+
+    }
+
+});
+
+
+document.addEventListener("keyup", e => {
+
+    keys[e.key.toLowerCase()] = false;
+
+});
+
+
+/* =========================================================
+   START GAME
+========================================================= */
+
+function startGame(){
+
+    document.getElementById("startScreen").style.display = "none";
+
+    gameRunning = true;
+
+    score = 0;
+    opponentScore = 0;
+
+    gameTime = 120;
+
+    updateScore();
+
+    resetPositions();
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+function resetPositions(){
+
+    players.forEach(p => {
+
+        p.x = p.homeX;
+        p.y = p.homeY;
+        p.stamina = 100;
+
+    });
+
+    enemies.forEach(p => {
+
+        p.x = p.homeX;
+        p.y = p.homeY;
+
+    });
+
+    ball.x = 600;
+    ball.y = 325;
+
+    ball.vx = 0;
+    ball.vy = 0;
+
+    ball.owner = null;
+
+}
+
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+function gameLoop(timestamp){
+
+    if(!gameRunning){
+
+        return;
+
+    }
+
+    let delta = timestamp - lastTime;
+
+    if(!lastTime){
+
+        lastTime = timestamp;
+
+    }
+
+    lastTime = timestamp;
+
+    if(!paused){
+
+        update(delta);
+
+    }
+
+    draw();
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+
+/* =========================================================
+   UPDATE
+========================================================= */
+
+function update(delta){
+
+    gameTime -= delta / 1000;
+
+    if(gameTime <= 0){
+
+        gameTime = 0;
+
+        gameRunning = false;
+
+        showMessage(
+            "FULL TIME! " +
+            score +
+            " - " +
+            opponentScore
+        );
+
+        setTimeout(() => {
+
+            document.getElementById("startScreen").style.display = "flex";
+
+        },1500);
+
+        return;
+
+    }
+
+    updateTimer();
+
+    moveActivePlayer();
+
+    moveOtherPlayers();
+
+    updateBall();
+
+    updateCPU();
+
+    checkGoal();
+
+}
+
+
+/* =========================================================
+   PLAYER MOVEMENT
+========================================================= */
+
+function moveActivePlayer(){
+
+    const p = players[activePlayer];
+
+    let dx = 0;
+    let dy = 0;
+
+    if(keys["w"] || keys["arrowup"]){
+
+        dy -= 1;
+
+    }
+
+    if(keys["s"] || keys["arrowdown"]){
+
+        dy += 1;
+
+    }
+
+    if(keys["a"] || keys["arrowleft"]){
+
+        dx -= 1;
+
+    }
+
+    if(keys["d"] || keys["arrowright"]){
+
+        dx += 1;
+
+    }
+
+    let moving = dx !== 0 || dy !== 0;
+
+    let speed = p.speed;
+
+    if(keys["shift"] && p.stamina > 0){
+
+        speed *= 1.7;
+
+        p.stamina -= .7;
+
+    }else{
+
+        p.stamina += .25;
+
+    }
+
+    p.stamina = Math.max(
+        0,
+        Math.min(100,p.stamina)
+    );
+
+
+    if(moving){
+
+        const length = Math.sqrt(
+            dx*dx + dy*dy
+        );
+
+        dx /= length;
+        dy /= length;
+
+        p.x += dx * speed;
+        p.y += dy * speed;
+
+    }
+
+
+    keepInsideField(p);
+
+}
+
+
+/* =========================================================
+   OTHER PLAYER MOVEMENT
+========================================================= */
+
+function moveOtherPlayers(){
+
+    players.forEach((p,index) => {
+
+        if(index === activePlayer){
+
+            return;
+
+        }
+
+        const targetX = p.homeX;
+        const targetY = p.homeY;
+
+        p.x += (targetX-p.x)*0.01;
+        p.y += (targetY-p.y)*0.01;
+
+    });
+
+}
+
+
+/* =========================================================
+   BALL
+========================================================= */
+
+function updateBall(){
+
+    if(ball.owner !== null){
+
+        const p = players[ball.owner];
+
+        ball.x = p.x + 18;
+        ball.y = p.y;
+
+        return;
+
+    }
+
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+
+    ball.vx *= .97;
+    ball.vy *= .97;
+
+    if(ball.y < field.y+10 ||
+       ball.y > field.y+field.height-10){
+
+        ball.vy *= -.8;
+
+    }
+
+}
+
+
+/* =========================================================
+   SHOOT
+========================================================= */
+
+function shoot(){
+
+    if(!gameRunning || paused){
+
+        return;
+
+    }
+
+    const p = players[activePlayer];
+
+    const distance = Math.hypot(
+        ball.x-p.x,
+        ball.y-p.y
+    );
+
+    if(distance > 55){
+
+        return;
+
+    }
+
+    ball.owner = null;
+
+    ball.vx = 12;
+
+    ball.vy =
+        (ball.y - 325) * .025;
+
+    ball.shooting = true;
+
+    showMessage("🔥 POWER SHOT!");
+
+}
+
+
+/* =========================================================
+   PASS
+========================================================= */
+
+function passBall(){
+
+    const p = players[activePlayer];
+
+    if(ball.owner !== activePlayer){
+
+        return;
+
+    }
+
+    let next =
+        (activePlayer + 1) %
+        players.length;
+
+    const target = players[next];
+
+    ball.owner = null;
+
+    ball.vx =
+        (target.x-p.x) * .08;
+
+    ball.vy =
+        (target.y-p.y) * .08;
+
+    showMessage("PASS!");
+
+}
+
+
+/* =========================================================
+   TACKLE
+========================================================= */
+
+function tackle(){
+
+    const p = players[activePlayer];
+
+    enemies.forEach(enemy => {
+
+        const d = Math.hypot(
+            enemy.x-p.x,
+            enemy.y-p.y
+        );
+
+        if(d < 65){
+
+            if(ball.owner === null){
+
+                ball.owner = activePlayer;
+
+            }
+
+            showMessage("⚡ GREAT TACKLE!");
+
+        }
+
+    });
+
+}
+
+
+/* =========================================================
+   SWITCH PLAYER
+========================================================= */
+
+function switchPlayer(){
+
+    activePlayer++;
+
+    if(activePlayer >= players.length){
+
+        activePlayer = 0;
+
+    }
+
+    showMessage(
+        "PLAYER " +
+        players[activePlayer].number
+    );
+
+}
+
+
+/* =========================================================
+   CPU AI
+========================================================= */
+
+function updateCPU(){
+
+    enemies.forEach(enemy => {
+
+        let targetX = enemy.homeX;
+        let targetY = enemy.homeY;
+
+        if(ball.owner === null){
+
+            targetX = ball.x;
+            targetY = ball.y;
+
+        }
+
+        const dx = targetX-enemy.x;
+        const dy = targetY-enemy.y;
+
+        const d = Math.hypot(dx,dy);
+
+        if(d > 5){
+
+            enemy.x += dx/d * 1.4;
+            enemy.y += dy/d * 1.4;
+
+        }
+
+        if(d < 35 && ball.owner === null){
+
+            ball.owner = null;
+
+            ball.x = enemy.x;
+            ball.y = enemy.y;
+
+            ball.vx = -8;
+
+            ball.vy =
+                (325-enemy.y)*.02;
+
+        }
+
+    });
+
+
+    // CPU goalkeeper
+
+    goalkeeper.y +=
+        (ball.y-goalkeeper.y)*.04;
+
+}
+
+
+/* =========================================================
+   GOAL CHECK
+========================================================= */
+
+function checkGoal(){
+
+    // USER GOAL
+
+    if(ball.x > field.x+field.width+5){
+
+        score++;
+
+        updateScore();
+
+        showMessage("⚽⚽ GOAL!!!");
+
+        resetAfterGoal();
+
+    }
+
+
+    // CPU GOAL
+
+    if(ball.x < field.x-5){
+
+        opponentScore++;
+
+        updateScore();
+
+        showMessage("CPU SCORED!");
+
+        resetAfterGoal();
+
+    }
+
+}
+
+
+/* =========================================================
+   RESET AFTER GOAL
+========================================================= */
+
+function resetAfterGoal(){
+
+    ball.x = 600;
+    ball.y = 325;
+
+    ball.vx = 0;
+    ball.vy = 0;
+
+    ball.owner = null;
+
+    setTimeout(() => {
+
+        if(gameRunning){
+
+            resetPositions();
+
+        }
+
+    },500);
+
+}
+
+
+/* =========================================================
+   FIELD BOUNDARY
+========================================================= */
+
+function keepInsideField(p){
+
+    p.x = Math.max(
+        field.x+20,
+        Math.min(
+            field.x+field.width-20,
+            p.x
+        )
+    );
+
+    p.y = Math.max(
+        field.y+20,
+        Math.min(
+            field.y+field.height-20,
+            p.y
+        )
+    );
+
+}
+
+
+/* =========================================================
+   DRAW FIELD
+========================================================= */
+
+function drawField(){
+
+    // grass
+
+    ctx.fillStyle = "#15803d";
+
+    ctx.fillRect(
+        field.x,
+        field.y,
+        field.width,
+        field.height
+    );
+
+
+    // grass stripes
+
+    for(let i=0;i<12;i++){
+
+        if(i%2===0){
+
+            ctx.fillStyle =
+                "rgba(255,255,255,.035)";
+
+            ctx.fillRect(
+                field.x+i*(field.width/12),
+                field.y,
+                field.width/12,
+                field.height
+            );
+
+        }
+
+    }
+
+
+    // outer line
+
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 5;
+
+    ctx.strokeRect(
+        field.x,
+        field.y,
+        field.width,
+        field.height
+    );
+
+
+    // center line
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        field.x+field.width/2,
+        field.y
+    );
+
+    ctx.lineTo(
+        field.x+field.width/2,
+        field.y+field.height
+    );
+
+    ctx.stroke();
+
+
+    // center circle
+
+    ctx.beginPath();
+
+    ctx.arc(
+        field.x+field.width/2,
+        field.y+field.height/2,
+        90,
+        0,
+        Math.PI*2
+    );
+
+    ctx.stroke();
+
+
+    // center point
+
+    ctx.beginPath();
+
+    ctx.arc(
+        600,
+        325,
+        5,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    // penalty boxes
+
+    ctx.strokeRect(
+        field.x,
+        185,
+        170,
+        280
+    );
+
+    ctx.strokeRect(
+        field.x+field.width-170,
+        185,
+        170,
+        280
+    );
+
+
+    // six yard boxes
+
+    ctx.strokeRect(
+        field.x,
+        245,
+        70,
+        160
+    );
+
+    ctx.strokeRect(
+        field.x+field.width-70,
+        245,
+        70,
+        160
+    );
+
+
+    // goals
+
+    ctx.fillStyle =
+        "rgba(255,255,255,.18)";
+
+    ctx.fillRect(
+        field.x-25,
+        245,
+        25,
+        160
+    );
+
+    ctx.fillRect(
+        field.x+field.width,
+        245,
+        25,
+        160
+    );
+
+}
+
+
+/* =========================================================
+   DRAW PLAYER
+========================================================= */
+
+function drawPlayer(p,isActive=false){
+
+    // shadow
+
+    ctx.beginPath();
+
+    ctx.fillStyle =
+        "rgba(0,0,0,.25)";
+
+    ctx.ellipse(
+        p.x,
+        p.y+17,
+        17,
+        7,
+        0,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    // player body
+
+    ctx.beginPath();
+
+    ctx.fillStyle = p.color;
+
+    ctx.arc(
+        p.x,
+        p.y,
+        15,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    // head
+
+    ctx.beginPath();
+
+    ctx.fillStyle = "#f4c7a1";
+
+    ctx.arc(
+        p.x,
+        p.y-18,
+        8,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    // number
+
+    ctx.fillStyle = "white";
+
+    ctx.font = "bold 10px Arial";
+
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+        p.number,
+        p.x,
+        p.y+4
+    );
+
+
+    // active ring
+
+    if(isActive){
+
+        ctx.beginPath();
+
+        ctx.strokeStyle = "#facc15";
+
+        ctx.lineWidth = 3;
+
+        ctx.arc(
+            p.x,
+            p.y,
+            23,
+            0,
+            Math.PI*2
+        );
+
+        ctx.stroke();
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW CPU
+========================================================= */
+
+function drawEnemy(p){
+
+    const player = {
+        x:p.x,
+        y:p.y,
+        number:p.number,
+        color:"#ef4444"
+    };
+
+    drawPlayer(player,false);
+
+}
+
+
+/* =========================================================
+   DRAW BALL
+========================================================= */
+
+function drawBall(){
+
+    // shadow
+
+    ctx.beginPath();
+
+    ctx.fillStyle =
+        "rgba(0,0,0,.25)";
+
+    ctx.ellipse(
+        ball.x,
+        ball.y+10,
+        10,
+        5,
+        0,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    // ball
+
+    ctx.beginPath();
+
+    ctx.fillStyle = "white";
+
+    ctx.arc(
+        ball.x,
+        ball.y,
+        ball.radius,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.strokeStyle = "#111827";
+
+    ctx.lineWidth = 2;
+
+    ctx.stroke();
+
+
+    // ball pattern
+
+    ctx.fillStyle = "#111827";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        ball.x,
+        ball.y,
+        3,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+}
+
+
+/* =========================================================
+   DRAW GOALKEEPER
+========================================================= */
+
+function drawGoalkeeper(){
+
+    ctx.beginPath();
+
+    ctx.fillStyle = "#facc15";
+
+    ctx.arc(
+        goalkeeper.x,
+        goalkeeper.y,
+        17,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.strokeStyle = "white";
+
+    ctx.lineWidth = 2;
+
+    ctx.stroke();
+
+
+    ctx.fillStyle = "#f4c7a1";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        goalkeeper.x,
+        goalkeeper.y-20,
+        8,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+}
+
+
+/* =========================================================
+   DRAW STAMINA
+========================================================= */
+
+function drawStamina(){
+
+    const p = players[activePlayer];
+
+    const x = 80;
+    const y = 620;
+
+    ctx.fillStyle =
+        "rgba(0,0,0,.5)";
+
+    ctx.fillRect(
+        x,
+        y,
+        200,
+        15
+    );
+
+    ctx.fillStyle = "#22c55e";
+
+    ctx.fillRect(
+        x,
+        y,
+        200*(p.stamina/100),
+        15
+    );
+
+    ctx.strokeStyle = "white";
+
+    ctx.strokeRect(
+        x,
+        y,
+        200,
+        15
+    );
+
+    ctx.fillStyle = "white";
+
+    ctx.font = "12px Arial";
+
+    ctx.textAlign = "left";
+
+    ctx.fillText(
+        "STAMINA",
+        x,
+        y-6
+    );
+
+}
+
+
+/* =========================================================
+   DRAW SCOREBOARD
+========================================================= */
+
+function drawMiniScore(){
+
+    ctx.fillStyle =
+        "rgba(2,6,23,.7)";
+
+    ctx.roundRect(
+        500,
+        55,
+        200,
+        45,
+        12
+    );
+
+    ctx.fill();
+
+    ctx.fillStyle = "white";
+
+    ctx.font = "bold 20px Arial";
+
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+        "YOU  " +
+        score +
+        "  -  " +
+        opponentScore +
+        "  CPU",
+        600,
+        84
+    );
+
+}
+
+
+/* =========================================================
+   DRAW EVERYTHING
+========================================================= */
+
+function draw(){
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    drawField();
+
+
+    // CPU players
+
+    enemies.forEach(enemy => {
+
+        drawEnemy(enemy);
+
+    });
+
+
+    // Our players
+
+    players.forEach((player,index) => {
+
+        drawPlayer(
+            player,
+            index === activePlayer
+        );
+
+    });
+
+
+    drawGoalkeeper();
+
+    drawBall();
+
+    drawStamina();
+
+    drawMiniScore();
+
+
+    if(paused){
+
+        ctx.fillStyle =
+            "rgba(0,0,0,.55)";
+
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        ctx.fillStyle = "white";
+
+        ctx.font = "bold 50px Arial";
+
+        ctx.textAlign = "center";
+
+        ctx.fillText(
+            "PAUSED",
+            600,
+            325
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   UI
+========================================================= */
+
+function updateScore(){
+
+    document.getElementById("score")
+        .textContent = score;
+
+    document.getElementById("opponentScore")
+        .textContent = opponentScore;
+
+}
+
+
+function updateTimer(){
+
+    const minutes =
+        Math.floor(gameTime/60);
+
+    const seconds =
+        Math.floor(gameTime%60);
+
+    document.getElementById("timer")
+        .textContent =
+        String(minutes).padStart(2,"0") +
+        ":" +
+        String(seconds).padStart(2,"0");
+
+}
+
+
+function showMessage(text){
+
+    const el =
+        document.getElementById("message");
+
+    el.textContent = text;
+
+    el.classList.add("show");
+
+    clearTimeout(messageTimer);
+
+    messageTimer = setTimeout(() => {
+
+        el.classList.remove("show");
+
+    },1200);
+
+}
+
+
+/* =========================================================
+   INITIAL DRAW
+========================================================= */
+
+draw();
+
+</script>
+
+</body>
+</html>
